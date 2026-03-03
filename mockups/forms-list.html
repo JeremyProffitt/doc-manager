@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Library — Doc-Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    [x-cloak] { display: none !important; }
+    body { font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { 600: '#4F46E5', 700: '#4338CA' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <!-- ==================== NAV BAR ==================== -->
+  <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <div class="flex-shrink-0">
+          <a href="#" class="text-xl font-bold text-primary-600 tracking-tight">Doc-Manager</a>
+        </div>
+        <!-- Nav Links -->
+        <div class="hidden md:flex items-center space-x-1">
+          <a href="#" class="px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">Dashboard</a>
+          <a href="#" class="px-3 py-2 rounded-md text-sm font-medium text-primary-600 bg-indigo-50">Forms</a>
+          <a href="#" class="px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">Customers</a>
+          <a href="#" class="px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">Settings</a>
+        </div>
+        <!-- User -->
+        <div class="flex items-center space-x-4">
+          <span class="text-sm text-gray-600 hidden sm:inline">admin@company.com</span>
+          <button class="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors">Logout</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Form Library</h1>
+        <p class="mt-1 text-sm text-gray-500">Manage your form templates and field mappings</p>
+      </div>
+      <button class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors shadow-sm">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Upload New Form
+      </button>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+      <div class="flex flex-col md:flex-row md:items-center gap-3">
+        <!-- Search -->
+        <div class="relative flex-1">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
+          <input type="text" placeholder="Search forms..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent transition">
+        </div>
+        <!-- Status Filter -->
+        <div class="flex items-center gap-3">
+          <select class="block w-full md:w-44 py-2 px-3 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent bg-white">
+            <option>All Statuses</option>
+            <option>Uploaded</option>
+            <option>Analyzed</option>
+            <option>Needs Review</option>
+          </select>
+          <!-- Sort -->
+          <select class="block w-full md:w-40 py-2 px-3 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent bg-white">
+            <option>Newest First</option>
+            <option>Name A-Z</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== POPULATED STATE ==================== -->
+    <div id="state-populated">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+        <!-- Card 1: W-9 (2024) — Analyzed -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
+          <div class="aspect-[3/4] bg-gray-100 relative flex items-center justify-center border-b border-gray-200">
+            <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <div class="absolute top-2 right-2">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Analyzed</span>
+            </div>
+          </div>
+          <div class="p-4">
+            <h3 class="text-sm font-semibold text-gray-900 line-clamp-1" title="W-9 Request for Taxpayer Identification Number">W-9 (2024)</h3>
+            <p class="text-xs text-gray-500 mt-1">Uploaded Mar 1, 2026</p>
+            <div class="flex items-center gap-3 mt-2">
+              <span class="text-xs text-gray-500">7 fields mapped</span>
+              <span class="text-xs text-gray-400">&middot;</span>
+              <span class="text-xs text-gray-500 font-medium">v3</span>
+            </div>
+            <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+              <div class="flex items-center gap-3">
+                <a href="forms-editor.html" class="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors">Edit Fields</a>
+                <a href="forms-preview.html" class="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors">Populate</a>
+              </div>
+              <button class="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: W-4 Employee Withholding — Analyzed -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
+          <div class="aspect-[3/4] bg-gray-100 relative flex items-center justify-center border-b border-gray-200">
+            <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <div class="absolute top-2 right-2">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Analyzed</span>
+            </div>
+          </div>
+          <div class="p-4">
+            <h3 class="text-sm font-semibold text-gray-900 line-clamp-1" title="W-4 Employee's Withholding Certificate">W-4 Employee Withholding (2024)</h3>
+            <p class="text-xs text-gray-500 mt-1">Uploaded Feb 28, 2026</p>
+            <div class="flex items-center gap-3 mt-2">
+              <span class="text-xs text-gray-500">12 fields mapped</span>
+              <span class="text-xs text-gray-400">&middot;</span>
+              <span class="text-xs text-gray-500 font-medium">v2</span>
+            </div>
+            <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+              <div class="flex items-center gap-3">
+                <a href="#" class="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors">Edit Fields</a>
+                <a href="#" class="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors">Populate</a>
+              </div>
+              <button class="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: 1099-NEC — Uploaded -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
+          <div class="aspect-[3/4] bg-gray-100 relative flex items-center justify-center border-b border-gray-200">
+            <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <div class="absolute top-2 right-2">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">Uploaded</span>
+            </div>
+          </div>
+          <div class="p-4">
+            <h3 class="text-sm font-semibold text-gray-900 line-clamp-1" title="1099-NEC Nonemployee Compensation">1099-NEC (2025)</h3>
+            <p class="text-xs text-gray-500 mt-1">Uploaded Mar 2, 2026</p>
+            <div class="flex items-center gap-3 mt-2">
+              <span class="text-xs text-gray-500">0 fields mapped</span>
+              <span class="text-xs text-gray-400">&middot;</span>
+              <span class="text-xs text-gray-500 font-medium">v1</span>
+            </div>
+            <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+              <div class="flex items-center gap-3">
+                <a href="#" class="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors">Edit Fields</a>
+                <a href="#" class="text-xs font-medium text-gray-400 cursor-not-allowed" title="No fields mapped yet">Populate</a>
+              </div>
+              <button class="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: I-9 Employment Eligibility — Needs Review -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
+          <div class="aspect-[3/4] bg-gray-100 relative flex items-center justify-center border-b border-gray-200">
+            <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <div class="absolute top-2 right-2">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">Needs Review</span>
+            </div>
+          </div>
+          <div class="p-4">
+            <h3 class="text-sm font-semibold text-gray-900 line-clamp-1" title="I-9 Employment Eligibility Verification">I-9 Employment Eligibility</h3>
+            <p class="text-xs text-gray-500 mt-1">Uploaded Feb 25, 2026</p>
+            <div class="flex items-center gap-3 mt-2">
+              <span class="text-xs text-gray-500">15 fields mapped</span>
+              <span class="text-xs text-gray-400">&middot;</span>
+              <span class="text-xs text-gray-500 font-medium">v1</span>
+            </div>
+            <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+              <div class="flex items-center gap-3">
+                <a href="#" class="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors">Edit Fields</a>
+                <a href="#" class="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors">Populate</a>
+              </div>
+              <button class="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 5: Client Intake Form — Analyzed -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
+          <div class="aspect-[3/4] bg-gray-100 relative flex items-center justify-center border-b border-gray-200">
+            <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <div class="absolute top-2 right-2">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Analyzed</span>
+            </div>
+          </div>
+          <div class="p-4">
+            <h3 class="text-sm font-semibold text-gray-900 line-clamp-1" title="Client Intake Form">Client Intake Form</h3>
+            <p class="text-xs text-gray-500 mt-1">Uploaded Feb 20, 2026</p>
+            <div class="flex items-center gap-3 mt-2">
+              <span class="text-xs text-gray-500">9 fields mapped</span>
+              <span class="text-xs text-gray-400">&middot;</span>
+              <span class="text-xs text-gray-500 font-medium">v4</span>
+            </div>
+            <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+              <div class="flex items-center gap-3">
+                <a href="#" class="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors">Edit Fields</a>
+                <a href="#" class="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors">Populate</a>
+              </div>
+              <button class="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 6: NDA Template — Error -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
+          <div class="aspect-[3/4] bg-gray-100 relative flex items-center justify-center border-b border-gray-200">
+            <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <div class="absolute top-2 right-2">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">Error</span>
+            </div>
+          </div>
+          <div class="p-4">
+            <h3 class="text-sm font-semibold text-gray-900 line-clamp-1" title="Non-Disclosure Agreement Template">NDA Template</h3>
+            <p class="text-xs text-gray-500 mt-1">Uploaded Mar 3, 2026</p>
+            <div class="flex items-center gap-3 mt-2">
+              <span class="text-xs text-red-500 text-xs">Analysis failed — retry</span>
+            </div>
+            <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+              <div class="flex items-center gap-3">
+                <a href="#" class="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors">Edit Fields</a>
+                <a href="#" class="text-xs font-medium text-gray-400 cursor-not-allowed">Populate</a>
+              </div>
+              <button class="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Result count -->
+      <p class="text-sm text-gray-500 mt-6">Showing 6 forms</p>
+    </div>
+
+    <!-- ==================== LOADING STATE (toggle via JS) ==================== -->
+    <div id="state-loading" class="hidden">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Skeleton Card 1 -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div class="aspect-[3/4] bg-gray-200 animate-pulse"></div>
+          <div class="p-4 space-y-3">
+            <div class="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+            <div class="h-3 bg-gray-200 rounded animate-pulse w-1/2"></div>
+            <div class="h-3 bg-gray-200 rounded animate-pulse w-2/3"></div>
+            <div class="pt-3 border-t border-gray-100 flex gap-3">
+              <div class="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+              <div class="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Skeleton Card 2 -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div class="aspect-[3/4] bg-gray-200 animate-pulse"></div>
+          <div class="p-4 space-y-3">
+            <div class="h-4 bg-gray-200 rounded animate-pulse w-2/3"></div>
+            <div class="h-3 bg-gray-200 rounded animate-pulse w-1/2"></div>
+            <div class="h-3 bg-gray-200 rounded animate-pulse w-3/5"></div>
+            <div class="pt-3 border-t border-gray-100 flex gap-3">
+              <div class="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+              <div class="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Skeleton Card 3 -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div class="aspect-[3/4] bg-gray-200 animate-pulse"></div>
+          <div class="p-4 space-y-3">
+            <div class="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+            <div class="h-3 bg-gray-200 rounded animate-pulse w-2/5"></div>
+            <div class="h-3 bg-gray-200 rounded animate-pulse w-3/4"></div>
+            <div class="pt-3 border-t border-gray-100 flex gap-3">
+              <div class="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+              <div class="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Skeleton Card 4 -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div class="aspect-[3/4] bg-gray-200 animate-pulse"></div>
+          <div class="p-4 space-y-3">
+            <div class="h-4 bg-gray-200 rounded animate-pulse w-3/5"></div>
+            <div class="h-3 bg-gray-200 rounded animate-pulse w-1/3"></div>
+            <div class="h-3 bg-gray-200 rounded animate-pulse w-2/3"></div>
+            <div class="pt-3 border-t border-gray-100 flex gap-3">
+              <div class="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+              <div class="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Skeleton Card 5 -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div class="aspect-[3/4] bg-gray-200 animate-pulse"></div>
+          <div class="p-4 space-y-3">
+            <div class="h-4 bg-gray-200 rounded animate-pulse w-2/3"></div>
+            <div class="h-3 bg-gray-200 rounded animate-pulse w-1/2"></div>
+            <div class="h-3 bg-gray-200 rounded animate-pulse w-1/2"></div>
+            <div class="pt-3 border-t border-gray-100 flex gap-3">
+              <div class="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+              <div class="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Skeleton Card 6 -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div class="aspect-[3/4] bg-gray-200 animate-pulse"></div>
+          <div class="p-4 space-y-3">
+            <div class="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+            <div class="h-3 bg-gray-200 rounded animate-pulse w-2/5"></div>
+            <div class="h-3 bg-gray-200 rounded animate-pulse w-3/5"></div>
+            <div class="pt-3 border-t border-gray-100 flex gap-3">
+              <div class="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+              <div class="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== EMPTY STATE (toggle via JS) ==================== -->
+    <div id="state-empty" class="hidden">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 py-16 px-6 text-center">
+        <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+          <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">No forms uploaded yet</h3>
+        <p class="text-sm text-gray-500 mb-6 max-w-sm mx-auto">Upload a PDF form to get started. Our AI will analyze it and detect fillable fields automatically.</p>
+        <button class="inline-flex items-center px-5 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors shadow-sm">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Upload Your First Form
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== ERROR STATE (toggle via JS) ==================== -->
+    <div id="state-error" class="hidden">
+      <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+        <div class="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+          <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+        </div>
+        <h3 class="text-base font-semibold text-red-600 mb-1">Failed to load forms</h3>
+        <p class="text-sm text-red-600 mb-4">There was an error connecting to the server. Please try again.</p>
+        <button class="inline-flex items-center px-4 py-2 bg-white border border-red-300 text-red-600 text-sm font-medium rounded-lg hover:bg-red-50 transition-colors">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Retry
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==================== STATE TOGGLE (for demo) ==================== -->
+  <div class="fixed bottom-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 p-3 z-50">
+    <p class="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">View State</p>
+    <div class="flex gap-1.5">
+      <button onclick="showState('populated')" class="px-2.5 py-1.5 text-xs font-medium rounded-md bg-primary-600 text-white hover:bg-primary-700 transition" id="btn-populated">Populated</button>
+      <button onclick="showState('loading')" class="px-2.5 py-1.5 text-xs font-medium rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition" id="btn-loading">Loading</button>
+      <button onclick="showState('empty')" class="px-2.5 py-1.5 text-xs font-medium rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition" id="btn-empty">Empty</button>
+      <button onclick="showState('error')" class="px-2.5 py-1.5 text-xs font-medium rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition" id="btn-error">Error</button>
+    </div>
+  </div>
+
+  <script>
+    function showState(state) {
+      const states = ['populated', 'loading', 'empty', 'error'];
+      states.forEach(s => {
+        document.getElementById('state-' + s).classList.toggle('hidden', s !== state);
+        const btn = document.getElementById('btn-' + s);
+        if (s === state) {
+          btn.classList.remove('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+          btn.classList.add('bg-primary-600', 'text-white', 'hover:bg-primary-700');
+        } else {
+          btn.classList.remove('bg-primary-600', 'text-white', 'hover:bg-primary-700');
+          btn.classList.add('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>
