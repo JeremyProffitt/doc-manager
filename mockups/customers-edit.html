@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Customer - Doc-Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Smooth transitions for toast */
+    .toast-enter { animation: slideIn 0.3s ease-out forwards; }
+    .toast-exit  { animation: slideOut 0.3s ease-in forwards; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(1rem); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideOut {
+      from { opacity: 1; transform: translateX(0); }
+      to   { opacity: 0; transform: translateX(1rem); }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+
+  <!-- ========== NAV BAR ========== -->
+  <nav class="bg-white border-b border-gray-200 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <div class="flex-shrink-0 flex items-center">
+          <svg class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+          </svg>
+          <span class="ml-2 text-xl font-bold text-gray-900">Doc-Manager</span>
+        </div>
+
+        <!-- Center nav links -->
+        <div class="hidden md:flex items-center space-x-1">
+          <a href="#" class="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+            Dashboard
+          </a>
+          <a href="#" class="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+            Forms
+          </a>
+          <a href="#" class="px-3 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 rounded-md transition-colors">
+            Customers
+          </a>
+          <a href="#" class="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+            Settings
+          </a>
+        </div>
+
+        <!-- Right: email + logout -->
+        <div class="hidden md:flex items-center space-x-4">
+          <span class="text-sm text-gray-500">proffitt.jeremy@gmail.com</span>
+          <button class="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Logout</button>
+        </div>
+
+        <!-- Mobile menu button -->
+        <div class="md:hidden">
+          <button id="mobile-menu-btn" class="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile menu (hidden by default) -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-gray-200 bg-white">
+      <div class="px-4 py-3 space-y-1">
+        <a href="#" class="block px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100">Dashboard</a>
+        <a href="#" class="block px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100">Forms</a>
+        <a href="#" class="block px-3 py-2 rounded-md text-sm font-medium text-white bg-indigo-600">Customers</a>
+        <a href="#" class="block px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100">Settings</a>
+      </div>
+      <div class="border-t border-gray-200 px-4 py-3">
+        <p class="text-sm text-gray-500">proffitt.jeremy@gmail.com</p>
+        <button class="mt-1 text-sm font-medium text-gray-600 hover:text-gray-900">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ========== MAIN CONTENT ========== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Breadcrumb -->
+    <nav class="mb-4" aria-label="Breadcrumb">
+      <ol class="flex items-center space-x-2 text-sm text-gray-500">
+        <li>
+          <a href="#" class="hover:text-indigo-600 transition-colors">Customers</a>
+        </li>
+        <li>
+          <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+          </svg>
+        </li>
+        <li>
+          <span id="breadcrumb-label" class="text-gray-700 font-medium">Edit Customer</span>
+        </li>
+      </ol>
+    </nav>
+
+    <!-- Page title + mode toggle (for demo purposes) -->
+    <div class="flex items-center justify-between mb-6">
+      <h1 id="page-title" class="text-2xl font-bold text-gray-900">Edit Customer</h1>
+      <button
+        onclick="toggleMode()"
+        class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 transition-colors shadow-sm"
+      >
+        <svg class="h-4 w-4 mr-1.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+        </svg>
+        <span id="toggle-label">Switch to Add Mode</span>
+      </button>
+    </div>
+
+    <!-- Form card -->
+    <div class="max-w-2xl mx-auto">
+      <div class="bg-white shadow-sm rounded-lg">
+        <div class="px-6 py-5 border-b border-gray-200">
+          <h2 id="card-title" class="text-lg font-semibold text-gray-900">Customer Information</h2>
+          <p class="mt-1 text-sm text-gray-500">Fill in the details below. Fields marked with <span class="text-red-500">*</span> are required.</p>
+        </div>
+
+        <form id="customer-form" class="px-6 py-6 space-y-5" novalidate>
+
+          <!-- Full Name — shown in ERROR state -->
+          <div>
+            <label for="full-name" class="block text-sm font-medium text-gray-700 mb-1">
+              Full Name <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="full-name"
+              name="full_name"
+              class="block w-full rounded-md border border-red-500 px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm"
+              data-edit-value="John Smith"
+              data-add-value=""
+              value="John Smith"
+              placeholder="e.g. Jane Doe"
+            />
+            <p class="mt-1 text-sm text-red-500 flex items-center" id="full-name-error">
+              <svg class="h-4 w-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+              </svg>
+              Full name is required
+            </p>
+          </div>
+
+          <!-- Business Name -->
+          <div>
+            <label for="business-name" class="block text-sm font-medium text-gray-700 mb-1">
+              Business Name <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="business-name"
+              name="business_name"
+              class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 sm:text-sm"
+              data-edit-value="Smith and Associates LLC"
+              data-add-value=""
+              value="Smith and Associates LLC"
+              placeholder="e.g. Acme Corp"
+            />
+          </div>
+
+          <!-- Street Address -->
+          <div>
+            <label for="street-address" class="block text-sm font-medium text-gray-700 mb-1">
+              Street Address <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="street-address"
+              name="street_address"
+              class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 sm:text-sm"
+              data-edit-value="123 Main Street"
+              data-add-value=""
+              value="123 Main Street"
+              placeholder="e.g. 456 Oak Ave"
+            />
+          </div>
+
+          <!-- City / State / ZIP — responsive grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-6 gap-4">
+            <!-- City -->
+            <div class="sm:col-span-3">
+              <label for="city" class="block text-sm font-medium text-gray-700 mb-1">
+                City <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="city"
+                name="city"
+                class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 sm:text-sm"
+                data-edit-value="Austin"
+                data-add-value=""
+                value="Austin"
+                placeholder="e.g. Houston"
+              />
+            </div>
+
+            <!-- State -->
+            <div class="sm:col-span-1">
+              <label for="state" class="block text-sm font-medium text-gray-700 mb-1">
+                State <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="state"
+                name="state"
+                maxlength="2"
+                class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 sm:text-sm"
+                data-edit-value="TX"
+                data-add-value=""
+                value="TX"
+                placeholder="TX"
+              />
+            </div>
+
+            <!-- ZIP Code -->
+            <div class="sm:col-span-2">
+              <label for="zip-code" class="block text-sm font-medium text-gray-700 mb-1">
+                ZIP Code <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="zip-code"
+                name="zip_code"
+                maxlength="10"
+                class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 sm:text-sm"
+                data-edit-value="78701"
+                data-add-value=""
+                value="78701"
+                placeholder="e.g. 77001"
+              />
+            </div>
+          </div>
+
+          <!-- Phone Number (optional) -->
+          <div>
+            <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 sm:text-sm"
+              data-edit-value="(512) 555-0101"
+              data-add-value=""
+              value="(512) 555-0101"
+              placeholder="e.g. (555) 123-4567"
+            />
+          </div>
+
+          <!-- Buttons -->
+          <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              id="save-btn"
+              onclick="showToast()"
+              class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 transition-colors"
+            >
+              <svg class="h-4 w-4 mr-1.5 -ml-0.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              <span id="save-btn-label">Save Customer</span>
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ========== SUCCESS TOAST ========== -->
+  <div
+    id="success-toast"
+    class="hidden fixed top-5 right-5 z-50 max-w-sm w-full"
+    role="alert"
+    aria-live="assertive"
+  >
+    <div class="bg-green-600 rounded-lg shadow-lg p-4 flex items-start space-x-3">
+      <!-- Checkmark icon -->
+      <div class="flex-shrink-0">
+        <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+      </div>
+      <!-- Message -->
+      <div class="flex-1">
+        <p class="text-sm font-semibold text-white">Success</p>
+        <p class="mt-0.5 text-sm text-green-100">Customer saved successfully.</p>
+      </div>
+      <!-- Dismiss X -->
+      <button
+        onclick="hideToast()"
+        class="flex-shrink-0 text-green-200 hover:text-white transition-colors focus:outline-none"
+        aria-label="Dismiss"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========== JAVASCRIPT ========== -->
+  <script>
+    // ------- Toast -------
+    let toastTimeout = null;
+
+    function showToast() {
+      const toast = document.getElementById('success-toast');
+      toast.classList.remove('hidden', 'toast-exit');
+      toast.classList.add('toast-enter');
+      // Auto-dismiss after 4 seconds
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(hideToast, 4000);
+    }
+
+    function hideToast() {
+      const toast = document.getElementById('success-toast');
+      toast.classList.remove('toast-enter');
+      toast.classList.add('toast-exit');
+      clearTimeout(toastTimeout);
+      setTimeout(() => {
+        toast.classList.add('hidden');
+        toast.classList.remove('toast-exit');
+      }, 300);
+    }
+
+    // ------- Edit / Add mode toggle -------
+    let isEditMode = true;
+
+    function toggleMode() {
+      isEditMode = !isEditMode;
+
+      const pageTitle       = document.getElementById('page-title');
+      const breadcrumbLabel = document.getElementById('breadcrumb-label');
+      const cardTitle       = document.getElementById('card-title');
+      const toggleLabel     = document.getElementById('toggle-label');
+      const saveBtnLabel    = document.getElementById('save-btn-label');
+
+      const inputs = document.querySelectorAll('#customer-form input');
+
+      if (isEditMode) {
+        pageTitle.textContent       = 'Edit Customer';
+        breadcrumbLabel.textContent = 'Edit Customer';
+        cardTitle.textContent       = 'Customer Information';
+        toggleLabel.textContent     = 'Switch to Add Mode';
+        saveBtnLabel.textContent    = 'Save Customer';
+        inputs.forEach(input => {
+          input.value = input.dataset.editValue || '';
+        });
+      } else {
+        pageTitle.textContent       = 'Add New Customer';
+        breadcrumbLabel.textContent = 'Add New Customer';
+        cardTitle.textContent       = 'New Customer';
+        toggleLabel.textContent     = 'Switch to Edit Mode';
+        saveBtnLabel.textContent    = 'Add Customer';
+        inputs.forEach(input => {
+          input.value = input.dataset.addValue || '';
+        });
+      }
+
+      // Reset the Full Name field error state based on mode
+      const fullNameInput = document.getElementById('full-name');
+      const fullNameError = document.getElementById('full-name-error');
+      if (!isEditMode) {
+        // In add mode, show error (empty field)
+        fullNameInput.classList.add('border-red-500');
+        fullNameInput.classList.remove('border-gray-300');
+        fullNameInput.classList.add('focus:ring-red-500', 'focus:border-red-500');
+        fullNameInput.classList.remove('focus:ring-indigo-600', 'focus:border-indigo-600');
+        fullNameError.classList.remove('hidden');
+      } else {
+        // In edit mode, also show error (to demonstrate the error state)
+        fullNameInput.classList.add('border-red-500');
+        fullNameInput.classList.remove('border-gray-300');
+        fullNameInput.classList.add('focus:ring-red-500', 'focus:border-red-500');
+        fullNameInput.classList.remove('focus:ring-indigo-600', 'focus:border-indigo-600');
+        fullNameError.classList.remove('hidden');
+      }
+    }
+
+    // ------- Mobile menu toggle -------
+    document.getElementById('mobile-menu-btn').addEventListener('click', function () {
+      document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+  </script>
+
+</body>
+</html>
