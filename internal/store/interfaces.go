@@ -16,3 +16,16 @@ type SessionStore interface {
 	GetSession(token string) (*models.Session, error)
 	DeleteSession(token string) error
 }
+
+// CustomerStore defines operations for managing customers in the data store.
+type CustomerStore interface {
+	CreateCustomer(customer *models.Customer) error
+	GetCustomer(id string) (*models.Customer, error)
+	ListCustomers() ([]models.Customer, error)
+}
+
+// SettingsStore defines operations for managing settings in the data store.
+type SettingsStore interface {
+	GetSetting(key string) (*models.Setting, error)
+	PutSetting(setting *models.Setting) error
+}
