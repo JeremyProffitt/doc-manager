@@ -2,7 +2,6 @@ version = 0.1
 
 [default.deploy.parameters]
 stack_name = "doc-manager"
-resolve_s3 = true
 s3_prefix = "doc-manager"
 region = "us-east-1"
 confirm_changeset = false
