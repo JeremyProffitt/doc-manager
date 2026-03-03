@@ -24,8 +24,10 @@ func setupFormsTestApp(t *testing.T) (*fiber.App, *mockFormStore, *mockFieldStor
 	fs := newMockFormStore()
 	flds := newMockFieldStore()
 	s3svc := newMockS3Service()
+	analysisSvc := newMockAnalysisService()
 
 	h := NewFormsHandler(fs, flds, s3svc)
+	h.SetAnalysisService(analysisSvc)
 
 	// Simulate auth middleware setting userEmail
 	app.Use(func(c *fiber.Ctx) error {
@@ -37,6 +39,7 @@ func setupFormsTestApp(t *testing.T) (*fiber.App, *mockFormStore, *mockFieldStor
 	app.Get("/forms/:id", h.GetForm)
 	app.Post("/api/forms/upload-url", h.GetUploadURL)
 	app.Post("/api/forms/:id/upload-complete", h.UploadComplete)
+	app.Post("/api/forms/:id/analyze", h.AnalyzeForm)
 	app.Delete("/api/forms/:id", h.DeleteForm)
 
 	return app, fs, flds, s3svc
@@ -224,6 +227,37 @@ func TestFormsHandlers(t *testing.T) {
 				})
 			},
 			expectedStatus: 200,
+		},
+		{
+			name:   "POST /api/forms/:id/analyze returns 202 Accepted",
+			method: http.MethodPost,
+			path:   "/api/forms/form-1/analyze",
+			setupForms: func(fs *mockFormStore) {
+				fs.CreateForm(&models.Form{
+					ID:     "form-1",
+					UserID: "test@example.com",
+					Name:   "test.pdf",
+					Status: "uploaded",
+					S3Key:  "forms/form-1/test.pdf",
+				})
+			},
+			expectedStatus: 202,
+			checkBody: func(t *testing.T, body string) {
+				t.Helper()
+				var resp map[string]string
+				if err := json.Unmarshal([]byte(body), &resp); err != nil {
+					t.Fatalf("failed to parse JSON: %v", err)
+				}
+				if resp["status"] != "analyzing" {
+					t.Errorf("expected status 'analyzing', got %q", resp["status"])
+				}
+			},
+		},
+		{
+			name:           "POST /api/forms/:id/analyze returns 404 for nonexistent form",
+			method:         http.MethodPost,
+			path:           "/api/forms/nonexistent/analyze",
+			expectedStatus: 404,
 		},
 	}
 

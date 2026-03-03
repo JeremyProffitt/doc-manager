@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	fiberadapter "github.com/awslabs/aws-lambda-go-api-proxy/fiber"
 	"github.com/gofiber/fiber/v2"
@@ -50,10 +51,16 @@ func main() {
 
 	// Create services
 	s3Service := services.NewS3Service(s3Client, presignClient, cfg.S3Bucket)
+	bedrockClient := bedrockruntime.NewFromConfig(awsCfg)
+	bedrockService := services.NewBedrockService(bedrockClient, cfg.BedrockModelID)
+	analysisService := services.NewAnalysisService(bedrockService, s3Service, formStore, fieldStore, settingsStore)
 
 	// Create handlers
 	authHandler := handlers.NewAuthHandler(userStore, sessionStore, cfg.JWTSecret)
 	formsHandler := handlers.NewFormsHandler(formStore, fieldStore, s3Service)
+	formsHandler.SetAnalysisService(analysisService)
+	editorHandler := handlers.NewEditorHandler(formStore, fieldStore, s3Service)
+	versionsHandler := handlers.NewVersionsHandler(fieldStore)
 	customersHandler := handlers.NewCustomersHandler(customerStore)
 	settingsHandler := handlers.NewSettingsHandler(settingsStore)
 
@@ -85,10 +92,19 @@ func main() {
 
 	// Form routes
 	app.Get("/forms", formsHandler.ListForms)
+	app.Get("/forms/:id/edit", editorHandler.EditForm)
 	app.Get("/forms/:id", formsHandler.GetForm)
 	app.Post("/api/forms/upload-url", formsHandler.GetUploadURL)
 	app.Post("/api/forms/:id/upload-complete", formsHandler.UploadComplete)
+	app.Post("/api/forms/:id/analyze", formsHandler.AnalyzeForm)
 	app.Delete("/api/forms/:id", formsHandler.DeleteForm)
+
+	// Field placement version routes
+	app.Get("/api/forms/:id/fields", versionsHandler.GetCurrentFields)
+	app.Get("/api/forms/:id/fields/versions", versionsHandler.ListVersions)
+	app.Get("/api/forms/:id/fields/:version", versionsHandler.GetVersion)
+	app.Post("/api/forms/:id/fields/revert/:v", versionsHandler.RevertToVersion)
+	app.Put("/api/forms/:id/fields", versionsHandler.SaveFields)
 
 	// Customer routes
 	app.Get("/customers", customersHandler.ListCustomers)

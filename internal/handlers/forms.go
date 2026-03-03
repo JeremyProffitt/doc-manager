@@ -18,11 +18,17 @@ type S3ServiceInterface interface {
 	DeleteObject(s3Key string) error
 }
 
+// AnalysisServiceInterface defines the analysis operations needed by FormsHandler.
+type AnalysisServiceInterface interface {
+	AnalyzeForm(formID string) error
+}
+
 // FormsHandler holds dependencies for form-related HTTP handlers.
 type FormsHandler struct {
-	formStore  store.FormStore
-	fieldStore store.FieldStore
-	s3Service  S3ServiceInterface
+	formStore       store.FormStore
+	fieldStore      store.FieldStore
+	s3Service       S3ServiceInterface
+	analysisService AnalysisServiceInterface
 }
 
 // NewFormsHandler creates a new FormsHandler with the given dependencies.
@@ -32,6 +38,13 @@ func NewFormsHandler(fs store.FormStore, flds store.FieldStore, s3svc S3ServiceI
 		fieldStore: flds,
 		s3Service:  s3svc,
 	}
+}
+
+// SetAnalysisService sets the analysis service for the FormsHandler.
+// This is separate from the constructor to avoid circular dependency issues
+// and because the analysis service is optional (not needed for all form operations).
+func (h *FormsHandler) SetAnalysisService(as AnalysisServiceInterface) {
+	h.analysisService = as
 }
 
 // ListForms renders the forms list page with all forms for the current user.
@@ -182,4 +195,30 @@ func (h *FormsHandler) DeleteForm(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"status": "deleted"})
+}
+
+// AnalyzeForm triggers asynchronous AI analysis of a form.
+// Returns 202 Accepted immediately while analysis runs in the background.
+// POST /api/forms/:id/analyze
+func (h *FormsHandler) AnalyzeForm(c *fiber.Ctx) error {
+	formID := c.Params("id")
+
+	form, err := h.formStore.GetForm(formID)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "failed to get form"})
+	}
+	if form == nil {
+		return c.Status(404).JSON(fiber.Map{"error": "form not found"})
+	}
+
+	if h.analysisService == nil {
+		return c.Status(500).JSON(fiber.Map{"error": "analysis service not configured"})
+	}
+
+	// Run analysis asynchronously
+	go func() {
+		_ = h.analysisService.AnalyzeForm(formID)
+	}()
+
+	return c.Status(202).JSON(fiber.Map{"status": "analyzing"})
 }

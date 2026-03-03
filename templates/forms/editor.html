@@ -1,1 +1,220 @@
-<div>Form editor placeholder</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Fields — {{.Form.Name}} — Doc-Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .field-overlay { transition: outline-color 0.15s, background-color 0.15s; }
+        .field-overlay:hover { cursor: move; }
+        .resize-handle { width: 8px; height: 8px; background: white; border: 2px solid #4F46E5; position: absolute; z-index: 10; }
+        .resize-handle.se { bottom: -4px; right: -4px; cursor: se-resize; }
+        .panel-scroll::-webkit-scrollbar { width: 4px; }
+        .panel-scroll::-webkit-scrollbar-track { background: transparent; }
+        .panel-scroll::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 2px; }
+        .panel-scroll::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex flex-col overflow-hidden">
+
+    <input type="hidden" id="form-id" value="{{.Form.ID}}">
+
+    <!-- NAV BAR -->
+    <nav class="bg-white border-b border-gray-200 flex-shrink-0 z-50">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-14">
+                <div class="flex-shrink-0">
+                    <a href="/" class="text-xl font-bold text-indigo-600 tracking-tight">Doc-Manager</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-1">
+                    <a href="/" class="px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">Dashboard</a>
+                    <a href="/forms" class="px-3 py-2 rounded-md text-sm font-medium text-indigo-600 bg-indigo-50">Forms</a>
+                    <a href="/customers" class="px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">Customers</a>
+                    <a href="/settings/fields" class="px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">Settings</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600 hidden sm:inline">{{.UserEmail}}</span>
+                    <form method="POST" action="/logout" class="inline">
+                        <button type="submit" class="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors">Sign Out</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- BREADCRUMB + TOOLBAR -->
+    <div class="bg-white border-b border-gray-200 flex-shrink-0">
+        <!-- Breadcrumb -->
+        <div class="px-4 sm:px-6 lg:px-8 pt-3 pb-2">
+            <nav class="flex items-center text-sm text-gray-500">
+                <a href="/forms" class="hover:text-indigo-600 transition-colors">Forms</a>
+                <svg class="w-4 h-4 mx-1.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                <a href="/forms/{{.Form.ID}}" class="hover:text-indigo-600 transition-colors">{{.Form.Name}}</a>
+                <svg class="w-4 h-4 mx-1.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                <span class="text-gray-700 font-medium">Edit Fields</span>
+            </nav>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="px-4 sm:px-6 lg:px-8 pb-3">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <!-- Left: Form name + Font controls -->
+                <div class="flex items-center gap-4">
+                    <h1 class="text-lg font-semibold text-gray-900 whitespace-nowrap">{{.Form.Name}}</h1>
+                    <div class="hidden lg:flex items-center gap-2 pl-4 border-l border-gray-200">
+                        <label class="text-xs text-gray-500 whitespace-nowrap">Font:</label>
+                        <select id="form-font-family" onchange="updateFormFont()" class="text-xs border border-gray-300 rounded-md px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-600">
+                            <option value="Helvetica" {{if eq .Form.FontFamily "Helvetica"}}selected{{end}}>Helvetica</option>
+                            <option value="Courier" {{if eq .Form.FontFamily "Courier"}}selected{{end}}>Courier</option>
+                            <option value="Times-Roman" {{if eq .Form.FontFamily "Times-Roman"}}selected{{end}}>Times-Roman</option>
+                        </select>
+                        <label class="text-xs text-gray-500 whitespace-nowrap ml-2">Size:</label>
+                        <select id="form-font-size" onchange="updateFormFont()" class="text-xs border border-gray-300 rounded-md px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-600">
+                            <option value="8" {{if eq .Form.FontSize 8}}selected{{end}}>8pt</option>
+                            <option value="9" {{if eq .Form.FontSize 9}}selected{{end}}>9pt</option>
+                            <option value="10" {{if eq .Form.FontSize 10}}selected{{end}}>10pt</option>
+                            <option value="11" {{if eq .Form.FontSize 11}}selected{{end}}>11pt</option>
+                            <option value="12" {{if eq .Form.FontSize 12}}selected{{end}}>12pt</option>
+                            <option value="14" {{if eq .Form.FontSize 14}}selected{{end}}>14pt</option>
+                            <option value="16" {{if eq .Form.FontSize 16}}selected{{end}}>16pt</option>
+                            <option value="18" {{if eq .Form.FontSize 18}}selected{{end}}>18pt</option>
+                            <option value="20" {{if eq .Form.FontSize 20}}selected{{end}}>20pt</option>
+                        </select>
+                    </div>
+                    <!-- Page Nav -->
+                    <div class="hidden sm:flex items-center gap-1.5 pl-4 border-l border-gray-200">
+                        <button id="prev-page-btn" onclick="prevPage()" class="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        </button>
+                        <span id="page-indicator" class="text-xs text-gray-600 font-medium whitespace-nowrap">Page 1 of 1</span>
+                        <button id="next-page-btn" onclick="nextPage()" class="p-1 rounded hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <!-- Right: Action buttons -->
+                <div class="flex items-center gap-2">
+                    <span id="save-status" class="text-xs text-gray-400 hidden md:inline mr-2"></span>
+                    <button onclick="analyzeForm()" class="px-3 py-1.5 text-xs font-medium text-purple-700 border border-purple-300 rounded-md hover:bg-purple-50 transition-colors">
+                        <span class="inline-flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                            Analyze with AI
+                        </span>
+                    </button>
+                    <a href="/forms/{{.Form.ID}}" class="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">Cancel</a>
+                    <button onclick="saveFields()" class="px-4 py-1.5 text-xs font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors shadow-sm">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- THREE-COLUMN LAYOUT -->
+    <div class="flex flex-1 overflow-hidden">
+
+        <!-- LEFT PANEL: Fields List -->
+        <div class="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                <h2 class="text-sm font-semibold text-gray-900">Fields</h2>
+                <button onclick="showAddFieldDialog()" class="inline-flex items-center px-2 py-1 text-xs font-medium text-indigo-600 border border-indigo-600 rounded hover:bg-indigo-50 transition-colors">
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Add Field
+                </button>
+            </div>
+            <div id="fields-list" class="flex-1 overflow-y-auto panel-scroll">
+                <ul class="py-1" id="fields-list-ul">
+                    <!-- Fields are rendered by JavaScript -->
+                </ul>
+            </div>
+            <div id="field-count" class="px-4 py-2.5 border-t border-gray-100 text-xs text-gray-400">
+                0 fields total
+            </div>
+        </div>
+
+        <!-- CENTER: Form Canvas -->
+        <div class="flex-1 bg-gray-100 overflow-auto p-6 flex items-start justify-center" id="canvas-container">
+            <div id="form-canvas" class="relative bg-white shadow-md border border-gray-300" style="width: 612px; min-height: 792px;">
+                <img id="form-image" class="w-full h-auto" alt="Form image" style="display: block;">
+                <div id="field-canvas" class="absolute inset-0">
+                    <!-- Field overlays are rendered by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Properties & Version History -->
+        <div class="w-72 bg-white border-l border-gray-200 flex flex-col flex-shrink-0 overflow-hidden">
+            <div class="flex-1 overflow-y-auto panel-scroll">
+                <!-- Field Properties -->
+                <div class="px-4 py-3 border-b border-gray-100">
+                    <h2 class="text-sm font-semibold text-gray-900">Field Properties</h2>
+                </div>
+                <div id="properties-panel" class="px-4 py-3 space-y-4">
+                    <p class="text-sm text-gray-400 italic">Select a field to view properties</p>
+                </div>
+
+                <!-- Version History -->
+                <div class="border-t border-gray-200">
+                    <div class="px-4 py-3 border-b border-gray-100">
+                        <h2 class="text-sm font-semibold text-gray-900">Version History</h2>
+                    </div>
+                    <div class="px-4 py-2">
+                        <ul id="version-history" class="space-y-0.5">
+                            <!-- Versions are rendered by JavaScript -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATUS BAR -->
+    <div class="bg-gray-800 text-gray-300 px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between text-xs flex-shrink-0">
+        <div class="flex items-center gap-4">
+            <span id="status-field-count">0 fields placed</span>
+            <span class="text-gray-500">|</span>
+            <span id="status-version">No versions</span>
+            <span class="text-gray-500">|</span>
+            <span id="status-changes" class="text-green-400 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-green-400 inline-block"></span>
+                No changes
+            </span>
+        </div>
+        <div class="flex items-center gap-3 text-gray-500">
+            <span>612 x 792 pt</span>
+        </div>
+    </div>
+
+    <!-- Add Field Dialog -->
+    <div id="add-field-dialog" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-80">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Field</h3>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Field Name</label>
+                <input id="new-field-name" type="text" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-600" placeholder="e.g. Name, Address, SSN">
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="hideAddFieldDialog()" class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+                <button onclick="confirmAddField()" class="px-3 py-1.5 text-sm text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/editor.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var fieldsData = {{.FieldsJSON}};
+            var placement = fieldsData ? fieldsData.fields : [];
+            initEditor(
+                placement,
+                '{{.ImageURL}}',
+                '{{.Form.FontFamily}}',
+                {{.Form.FontSize}}
+            );
+
+            var versions = {{.VersionsJSON}};
+            if (versions) renderVersionHistory(versions);
+        });
+    </script>
+</body>
+</html>

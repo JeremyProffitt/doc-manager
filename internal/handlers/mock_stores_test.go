@@ -269,3 +269,19 @@ func (m *mockS3Service) GetObject(s3Key string) ([]byte, error) {
 func (m *mockS3Service) DeleteObject(s3Key string) error {
 	return nil
 }
+
+// --- Mock Analysis Service for handler tests ---
+
+type mockAnalysisService struct {
+	err error
+}
+
+func newMockAnalysisService() *mockAnalysisService {
+	return &mockAnalysisService{}
+}
+
+func (m *mockAnalysisService) AnalyzeForm(formID string) error {
+	return m.err
+}
+
+var _ AnalysisServiceInterface = (*mockAnalysisService)(nil)
