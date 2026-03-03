@@ -1,1 +1,253 @@
-<div>Populate preview placeholder</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview &mdash; {{.Form.Name}} &mdash; Doc-Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .field-overlay {
+            position: absolute;
+            pointer-events: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #1e3a5f;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex flex-col overflow-hidden">
+
+    <!-- NAV BAR -->
+    <nav class="bg-white border-b border-gray-200 flex-shrink-0 z-50">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-14">
+                <div class="flex-shrink-0">
+                    <a href="/" class="text-xl font-bold text-indigo-600 tracking-tight">Doc-Manager</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-1">
+                    <a href="/" class="px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">Dashboard</a>
+                    <a href="/forms" class="px-3 py-2 rounded-md text-sm font-medium text-indigo-600 bg-indigo-50">Forms</a>
+                    <a href="/customers" class="px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">Customers</a>
+                    <a href="/settings/fields" class="px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">Settings</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600 hidden sm:inline">{{.UserEmail}}</span>
+                    <form method="POST" action="/logout" class="inline">
+                        <button type="submit" class="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors">Sign Out</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- BREADCRUMB + TOOLBAR -->
+    <div class="bg-white border-b border-gray-200 flex-shrink-0">
+        <!-- Breadcrumb -->
+        <div class="px-4 sm:px-6 lg:px-8 pt-3 pb-2">
+            <nav class="flex items-center text-sm text-gray-500">
+                <a href="/forms" class="hover:text-indigo-600 transition-colors">Forms</a>
+                <svg class="w-4 h-4 mx-1.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                <a href="/forms/{{.Form.ID}}" class="hover:text-indigo-600 transition-colors">{{.Form.Name}}</a>
+                <svg class="w-4 h-4 mx-1.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                <span class="text-gray-700 font-medium">Populate</span>
+            </nav>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="px-4 sm:px-6 lg:px-8 pb-3">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <!-- Left: Customer selector -->
+                <div class="flex items-center gap-4">
+                    <h1 class="text-lg font-semibold text-gray-900 whitespace-nowrap">{{.Form.Name}}</h1>
+                    <div class="flex items-center gap-2 pl-4 border-l border-gray-200">
+                        <label for="customer-selector" class="text-xs text-gray-500 whitespace-nowrap">Customer:</label>
+                        <select id="customer-selector" onchange="changeCustomer()" class="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-600 min-w-[200px]">
+                            {{range .Customers}}
+                            <option value="{{.ID}}" {{if eq .ID $.Customer.ID}}selected{{end}}>{{.Name}}{{if .Business}} &mdash; {{.Business}}{{end}}</option>
+                            {{end}}
+                        </select>
+                    </div>
+                </div>
+                <!-- Right: Action buttons -->
+                <div class="flex items-center gap-2">
+                    <a href="/forms/{{.Form.ID}}/edit" class="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                        Back to Editor
+                    </a>
+                    <a id="download-btn" href="/forms/{{.Form.ID}}/download/{{.Customer.ID}}" class="px-4 py-1.5 text-xs font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors shadow-sm inline-flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Download PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="flex-1 overflow-auto bg-gray-100">
+        <!-- Info box -->
+        <div class="max-w-4xl mx-auto mt-4 px-4">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-700 flex items-start gap-2">
+                <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                <span>Preview shows approximate text placement. Downloaded PDF will use exact coordinates.</span>
+            </div>
+        </div>
+
+        <!-- Form preview canvas -->
+        <div class="flex items-start justify-center p-6">
+            <div id="form-canvas" class="relative bg-white shadow-lg border border-gray-300" style="width: 612px; min-height: 792px;">
+                <img id="form-image" class="w-full h-auto" alt="Form image" style="display: block;" crossorigin="anonymous">
+                <div id="field-canvas" class="absolute inset-0">
+                    <!-- Customer data overlays rendered by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer details summary -->
+        <div class="max-w-4xl mx-auto px-4 pb-6">
+            <div class="bg-white rounded-lg border border-gray-200 p-4">
+                <h3 class="text-sm font-semibold text-gray-900 mb-3">Customer Details</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                    <div>
+                        <span class="text-gray-500 block text-xs">Name</span>
+                        <span class="text-gray-900 font-medium">{{.Customer.Name}}</span>
+                    </div>
+                    {{if .Customer.Business}}
+                    <div>
+                        <span class="text-gray-500 block text-xs">Business</span>
+                        <span class="text-gray-900 font-medium">{{.Customer.Business}}</span>
+                    </div>
+                    {{end}}
+                    {{if .Customer.Address}}
+                    <div>
+                        <span class="text-gray-500 block text-xs">Address</span>
+                        <span class="text-gray-900 font-medium">{{.Customer.Address}}</span>
+                    </div>
+                    {{end}}
+                    {{if .Customer.City}}
+                    <div>
+                        <span class="text-gray-500 block text-xs">City</span>
+                        <span class="text-gray-900 font-medium">{{.Customer.City}}</span>
+                    </div>
+                    {{end}}
+                    {{if .Customer.State}}
+                    <div>
+                        <span class="text-gray-500 block text-xs">State</span>
+                        <span class="text-gray-900 font-medium">{{.Customer.State}}</span>
+                    </div>
+                    {{end}}
+                    {{if .Customer.Zip}}
+                    <div>
+                        <span class="text-gray-500 block text-xs">Zip</span>
+                        <span class="text-gray-900 font-medium">{{.Customer.Zip}}</span>
+                    </div>
+                    {{end}}
+                    {{if .Customer.Phone}}
+                    <div>
+                        <span class="text-gray-500 block text-xs">Phone</span>
+                        <span class="text-gray-900 font-medium">{{.Customer.Phone}}</span>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Form and customer data from server.
+        var formID = '{{.Form.ID}}';
+        var customerID = '{{.Customer.ID}}';
+        var placementData = {{.PlacementJSON}};
+        var customerData = {{.CustomerJSON}};
+        var imageURL = '{{.ImageURL}}';
+
+        // Map field names to customer data values.
+        function getFieldValue(fieldName) {
+            if (!customerData) return '';
+            switch (fieldName) {
+                case 'Name': return customerData.name || '';
+                case 'Business': return customerData.business || '';
+                case 'Address': return customerData.address || '';
+                case 'City': return customerData.city || '';
+                case 'State': return customerData.state || '';
+                case 'Zip': return customerData.zip || '';
+                case 'Phone Number':
+                case 'Phone': return customerData.phone || '';
+                default: return '';
+            }
+        }
+
+        // Map font names to CSS-compatible font families.
+        function mapFont(fontFamily) {
+            switch (fontFamily) {
+                case 'Courier': return "'Courier New', Courier, monospace";
+                case 'Times-Roman':
+                case 'Times': return "'Times New Roman', Times, serif";
+                default: return "Helvetica, Arial, sans-serif";
+            }
+        }
+
+        // Render customer data at field positions on the form image.
+        function renderOverlays() {
+            var canvas = document.getElementById('field-canvas');
+            canvas.innerHTML = '';
+
+            if (!placementData || !placementData.fields) return;
+
+            var defaultFontFamily = placementData.fontFamily || 'Helvetica';
+            var defaultFontSize = placementData.fontSize || 12;
+
+            placementData.fields.forEach(function(field) {
+                var value = getFieldValue(field.fieldName);
+                if (!value) return;
+
+                var fontFamily = (field.fontFamily && field.fontFamily !== '') ? field.fontFamily : defaultFontFamily;
+                var fontSize = (field.fontSize && field.fontSize > 0) ? field.fontSize : defaultFontSize;
+
+                var el = document.createElement('div');
+                el.className = 'field-overlay';
+                el.style.left = field.x + '%';
+                el.style.top = field.y + '%';
+                el.style.width = field.width + '%';
+                el.style.height = field.height + '%';
+                el.style.fontFamily = mapFont(fontFamily);
+                el.style.fontSize = fontSize + 'pt';
+                el.style.lineHeight = field.height + '%';
+                el.textContent = value;
+
+                canvas.appendChild(el);
+            });
+        }
+
+        // Change customer by navigating to the new URL.
+        function changeCustomer() {
+            var select = document.getElementById('customer-selector');
+            var newCustId = select.value;
+            window.location.href = '/forms/' + formID + '/populate/' + newCustId;
+        }
+
+        // Initialize on page load.
+        document.addEventListener('DOMContentLoaded', function() {
+            var img = document.getElementById('form-image');
+            if (imageURL) {
+                img.src = imageURL;
+                img.onload = function() {
+                    renderOverlays();
+                };
+            }
+
+            // Update download button link when customer changes.
+            var downloadBtn = document.getElementById('download-btn');
+            if (downloadBtn) {
+                downloadBtn.href = '/forms/' + formID + '/download/' + customerID;
+            }
+
+            // Render overlays immediately if image is already cached.
+            if (img.complete && img.naturalWidth > 0) {
+                renderOverlays();
+            }
+        });
+    </script>
+</body>
+</html>

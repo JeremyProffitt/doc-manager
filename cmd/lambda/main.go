@@ -63,6 +63,8 @@ func main() {
 	versionsHandler := handlers.NewVersionsHandler(fieldStore)
 	customersHandler := handlers.NewCustomersHandler(customerStore)
 	settingsHandler := handlers.NewSettingsHandler(settingsStore)
+	pdfService := services.NewPDFService()
+	populateHandler := handlers.NewPopulateHandler(formStore, fieldStore, customerStore, s3Service, pdfService)
 
 	// Set up template engine
 	engine := html.New("./templates", ".html")
@@ -93,6 +95,8 @@ func main() {
 	// Form routes
 	app.Get("/forms", formsHandler.ListForms)
 	app.Get("/forms/:id/edit", editorHandler.EditForm)
+	app.Get("/forms/:id/populate/:custId", populateHandler.PreviewPopulatedForm)
+	app.Get("/forms/:id/download/:custId", populateHandler.DownloadPopulatedForm)
 	app.Get("/forms/:id", formsHandler.GetForm)
 	app.Post("/api/forms/upload-url", formsHandler.GetUploadURL)
 	app.Post("/api/forms/:id/upload-complete", formsHandler.UploadComplete)
