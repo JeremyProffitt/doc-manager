@@ -52,7 +52,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{.Phone}}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                             <a href="/customers/{{.ID}}" class="text-indigo-600 hover:text-indigo-700 mr-3">View</a>
-                            <button onclick="deleteCustomer('{{.ID}}')" class="text-red-600 hover:text-red-700">Delete</button>
+                            <button onclick="deleteCustomer('{{.ID}}', '{{.Name}}')" class="text-red-600 hover:text-red-700">Delete</button>
                         </td>
                     </tr>
                     {{end}}
@@ -70,15 +70,3 @@
         {{end}}
     </main>
 </div>
-
-<script>
-async function deleteCustomer(id) {
-    if (!confirm('Are you sure you want to delete this customer?')) return;
-    try {
-        await fetch('/api/customers/' + id, { method: 'DELETE' });
-        window.location.reload();
-    } catch (err) {
-        alert('Delete failed: ' + err.message);
-    }
-}
-</script>
