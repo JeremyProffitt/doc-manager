@@ -70,13 +70,21 @@ jobs:
       - name: SAM build
         run: sam build
 
+      - name: Ensure SAM deployment bucket exists
+        run: |
+          BUCKET="doc-manager-sam-deploy-${{ vars.AWS_REGION }}"
+          if ! aws s3api head-bucket --bucket "$BUCKET" 2>/dev/null; then
+            aws s3 mb "s3://$BUCKET" --region ${{ vars.AWS_REGION }}
+          fi
+          echo "SAM_BUCKET=$BUCKET" >> "$GITHUB_ENV"
+
       - name: SAM deploy
         run: |
           sam deploy \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
             --stack-name doc-manager \
-            --resolve-s3 \
+            --s3-bucket "$SAM_BUCKET" \
             --region ${{ vars.AWS_REGION }} \
             --parameter-overrides JwtSecret=${{ secrets.JWT_SECRET }} \
             --capabilities CAPABILITY_IAM
