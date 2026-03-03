@@ -1,9 +1,12 @@
-.PHONY: all build test test-integration vet sam-build sam-deploy seed local clean
+.PHONY: all build build-DocManagerFunction test test-integration vet sam-build sam-deploy seed local clean
 
 all: vet test build
 
 build:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags lambda.norpc -o bootstrap cmd/lambda/main.go
+
+build-DocManagerFunction:
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags lambda.norpc -o $(ARTIFACTS_DIR)/bootstrap cmd/lambda/main.go
 
 test:
 	go test -race ./...
