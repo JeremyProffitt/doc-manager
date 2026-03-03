@@ -76,7 +76,7 @@ jobs:
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
             --stack-name doc-manager \
-            --s3-bucket ${{ vars.SAM_S3_BUCKET }} \
+            --resolve-s3 \
             --region ${{ vars.AWS_REGION }} \
             --parameter-overrides JwtSecret=${{ secrets.JWT_SECRET }} \
             --capabilities CAPABILITY_IAM
