@@ -1,0 +1,133 @@
+name: Build & Deploy Doc-Manager
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: '1.22'
+
+jobs:
+  build-and-deploy:
+    name: Build, Test & Deploy
+    runs-on: ubuntu-latest
+    outputs:
+      api_url: ${{ steps.get-url.outputs.api_url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go ${{ env.GO_VERSION }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Run tests with coverage
+        run: go test -race -coverprofile=coverage.out ./...
+
+      - name: Check coverage threshold (80%)
+        run: |
+          COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+          echo "Total coverage: ${COVERAGE}%"
+          THRESHOLD=80
+          if [ "$(echo "${COVERAGE} < ${THRESHOLD}" | bc -l)" -eq 1 ]; then
+            echo "::error::Coverage ${COVERAGE}% is below the ${THRESHOLD}% threshold"
+            exit 1
+          fi
+          echo "Coverage ${COVERAGE}% meets the ${THRESHOLD}% threshold"
+
+      - name: Build Lambda binary
+        run: |
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
+            -tags lambda.norpc \
+            -o bootstrap \
+            cmd/lambda/main.go
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Install SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: SAM build
+        run: sam build
+
+      - name: SAM deploy
+        run: |
+          sam deploy \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --stack-name doc-manager \
+            --s3-bucket ${{ vars.SAM_S3_BUCKET }} \
+            --region ${{ vars.AWS_REGION }} \
+            --parameter-overrides JwtSecret=${{ secrets.JWT_SECRET }} \
+            --capabilities CAPABILITY_IAM
+
+      - name: Get API URL from stack outputs
+        id: get-url
+        run: |
+          API_URL=$(aws cloudformation describe-stacks \
+            --stack-name doc-manager \
+            --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" \
+            --output text \
+            --region ${{ vars.AWS_REGION }})
+          echo "api_url=${API_URL}" >> "$GITHUB_OUTPUT"
+          echo "API URL: ${API_URL}"
+
+      - name: Run seed script
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          SEED_USER_PASSWORD: ${{ secrets.SEED_USER_PASSWORD }}
+          USERS_TABLE: DocMgr-Users-prod
+          CUSTOMERS_TABLE: DocMgr-Customers-prod
+          SETTINGS_TABLE: DocMgr-Settings-prod
+        run: go run cmd/seed/main.go
+
+  e2e:
+    name: End-to-End Tests
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    if: always() && needs.build-and-deploy.result == 'success'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install E2E dependencies
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run Playwright E2E tests
+        working-directory: e2e
+        env:
+          BASE_URL: ${{ needs.build-and-deploy.outputs.api_url }}
+        run: npx playwright test
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 14

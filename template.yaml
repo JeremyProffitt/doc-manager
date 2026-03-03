@@ -1,0 +1,269 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Doc-Manager - Online document management tool with AI-powered field detection.
+  GoFiber Lambda function backed by DynamoDB, S3, and Amazon Bedrock.
+
+Globals:
+  Function:
+    Timeout: 300
+    MemorySize: 512
+
+Parameters:
+  JwtSecret:
+    Type: String
+    NoEcho: true
+    Description: Secret key used for signing JWT session tokens
+  Stage:
+    Type: String
+    Default: prod
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Deployment stage
+
+Resources:
+  # ---------- Lambda Function ----------
+  DocManagerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub doc-manager-${Stage}
+      CodeUri: .
+      Handler: bootstrap
+      Runtime: provided.al2023
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref FormStorageBucket
+          BEDROCK_MODEL_ID: anthropic.claude-sonnet-4-20250514
+          AWS_REGION_NAME: us-east-1
+          JWT_SECRET: !Ref JwtSecret
+          STAGE: !Ref Stage
+          USERS_TABLE: !Ref UsersTable
+          FORMS_TABLE: !Ref FormsTable
+          FIELD_PLACEMENTS_TABLE: !Ref FieldPlacementsTable
+          CUSTOMERS_TABLE: !Ref CustomersTable
+          SETTINGS_TABLE: !Ref SettingsTable
+          SESSIONS_TABLE: !Ref SessionsTable
+      Events:
+        CatchAll:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref DocManagerApi
+            Path: $default
+            Method: ANY
+        ProxyRoute:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref DocManagerApi
+            Path: /{proxy+}
+            Method: ANY
+      Policies:
+        # S3 access for form file storage
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:PutObject
+                - s3:DeleteObject
+              Resource: !Sub ${FormStorageBucket.Arn}/*
+        # DynamoDB access for all 6 tables
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+                - dynamodb:Query
+                - dynamodb:Scan
+              Resource:
+                - !GetAtt UsersTable.Arn
+                - !GetAtt FormsTable.Arn
+                - !Sub ${FormsTable.Arn}/index/*
+                - !GetAtt FieldPlacementsTable.Arn
+                - !GetAtt CustomersTable.Arn
+                - !GetAtt SettingsTable.Arn
+                - !GetAtt SessionsTable.Arn
+        # Bedrock access for AI field detection
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-sonnet-4-20250514
+    Metadata:
+      BuildMethod: makefile
+
+  # ---------- API Gateway v2 (HTTP API) ----------
+  DocManagerApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Stage
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+          - PATCH
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+          - X-Requested-With
+          - Accept
+          - Origin
+        MaxAge: 3600
+
+  # ---------- S3 Bucket for Form File Storage ----------
+  FormStorageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub doc-manager-forms-${AWS::AccountId}-${Stage}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - "*"
+            AllowedMethods:
+              - PUT
+              - GET
+            AllowedHeaders:
+              - "*"
+            MaxAge: 3600
+      LifecycleConfiguration:
+        Rules:
+          - Id: CleanupIncompleteUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+
+  # ---------- DynamoDB Tables ----------
+
+  # Users table — stores email/password (bcrypt) for authentication
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub DocMgr-Users-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  # Forms table — stores form metadata with GSI for per-user queries
+  FormsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub DocMgr-Forms-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: UserIdIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  # FieldPlacements table — stores field placement versions per form
+  FieldPlacementsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub DocMgr-FieldPlacements-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: formId
+          AttributeType: S
+        - AttributeName: version
+          AttributeType: "N"
+      KeySchema:
+        - AttributeName: formId
+          KeyType: HASH
+        - AttributeName: version
+          KeyType: RANGE
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  # Customers table — stores customer data for form population
+  CustomersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub DocMgr-Customers-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  # Settings table — stores configurable standard fields and app settings
+  SettingsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub DocMgr-Settings-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: key
+          AttributeType: S
+      KeySchema:
+        - AttributeName: key
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  # Sessions table — stores JWT session tokens with TTL auto-expiry
+  SessionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub DocMgr-Sessions-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: token
+          AttributeType: S
+      KeySchema:
+        - AttributeName: token
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+Outputs:
+  ApiUrl:
+    Description: HTTP API endpoint URL for the Doc-Manager application
+    Value: !Sub https://${DocManagerApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}
+  DocManagerFunctionArn:
+    Description: Lambda function ARN
+    Value: !GetAtt DocManagerFunction.Arn
+  FormStorageBucketName:
+    Description: S3 bucket name for form file storage
+    Value: !Ref FormStorageBucket
