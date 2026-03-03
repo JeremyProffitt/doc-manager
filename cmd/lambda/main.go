@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	fiberadapter "github.com/awslabs/aws-lambda-go-api-proxy/fiber"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/template/html/v2"
@@ -12,6 +15,7 @@ import (
 	"github.com/JeremyProffitt/doc-manager/internal/config"
 	"github.com/JeremyProffitt/doc-manager/internal/handlers"
 	"github.com/JeremyProffitt/doc-manager/internal/middleware"
+	"github.com/JeremyProffitt/doc-manager/internal/services"
 	"github.com/JeremyProffitt/doc-manager/internal/store"
 )
 
@@ -24,12 +28,34 @@ func main() {
 		log.Fatalf("failed to create DynamoDB client: %v", err)
 	}
 
+	// Initialize AWS config for S3
+	awsCfg, err := awsconfig.LoadDefaultConfig(context.TODO(),
+		awsconfig.WithRegion(cfg.AWSRegion),
+	)
+	if err != nil {
+		log.Fatalf("failed to load AWS config: %v", err)
+	}
+
+	// Create S3 client and presign client
+	s3Client := s3.NewFromConfig(awsCfg)
+	presignClient := s3.NewPresignClient(s3Client)
+
 	// Create stores
 	userStore := store.NewUserStore(dynamoClient, cfg.UsersTable)
 	sessionStore := store.NewSessionStore(dynamoClient, cfg.SessionsTable)
+	formStore := store.NewFormStore(dynamoClient, cfg.FormsTable)
+	fieldStore := store.NewFieldStore(dynamoClient, cfg.FieldPlacementsTable)
+	customerStore := store.NewCustomerStore(dynamoClient, cfg.CustomersTable)
+	settingsStore := store.NewSettingsStore(dynamoClient, cfg.SettingsTable)
+
+	// Create services
+	s3Service := services.NewS3Service(s3Client, presignClient, cfg.S3Bucket)
 
 	// Create handlers
 	authHandler := handlers.NewAuthHandler(userStore, sessionStore, cfg.JWTSecret)
+	formsHandler := handlers.NewFormsHandler(formStore, fieldStore, s3Service)
+	customersHandler := handlers.NewCustomersHandler(customerStore)
+	settingsHandler := handlers.NewSettingsHandler(settingsStore)
 
 	// Set up template engine
 	engine := html.New("./templates", ".html")
@@ -56,6 +82,26 @@ func main() {
 
 	// Dashboard
 	app.Get("/", handlers.Home)
+
+	// Form routes
+	app.Get("/forms", formsHandler.ListForms)
+	app.Get("/forms/:id", formsHandler.GetForm)
+	app.Post("/api/forms/upload-url", formsHandler.GetUploadURL)
+	app.Post("/api/forms/:id/upload-complete", formsHandler.UploadComplete)
+	app.Delete("/api/forms/:id", formsHandler.DeleteForm)
+
+	// Customer routes
+	app.Get("/customers", customersHandler.ListCustomers)
+	app.Get("/customers/new", customersHandler.NewCustomer)
+	app.Get("/customers/:id", customersHandler.GetCustomer)
+	app.Post("/customers", customersHandler.CreateCustomer)
+	app.Put("/api/customers/:id", customersHandler.UpdateCustomer)
+	app.Delete("/api/customers/:id", customersHandler.DeleteCustomer)
+	app.Get("/api/customers", customersHandler.ListCustomersAPI)
+
+	// Settings routes
+	app.Get("/settings/fields", settingsHandler.GetFields)
+	app.Put("/api/settings/fields", settingsHandler.UpdateFields)
 
 	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") != "" {
 		fiberLambda := fiberadapter.New(app)

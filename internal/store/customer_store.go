@@ -82,3 +82,34 @@ func (s *DynamoCustomerStore) ListCustomers() ([]models.Customer, error) {
 	}
 	return customers, nil
 }
+
+// UpdateCustomer overwrites an existing customer in DynamoDB.
+func (s *DynamoCustomerStore) UpdateCustomer(customer *models.Customer) error {
+	item, err := attributevalue.MarshalMap(customer)
+	if err != nil {
+		return fmt.Errorf("marshaling customer: %w", err)
+	}
+
+	_, err = s.client.PutItem(context.Background(), &dynamodb.PutItemInput{
+		TableName: aws.String(s.tableName),
+		Item:      item,
+	})
+	if err != nil {
+		return fmt.Errorf("updating customer item: %w", err)
+	}
+	return nil
+}
+
+// DeleteCustomer removes a customer by ID from DynamoDB.
+func (s *DynamoCustomerStore) DeleteCustomer(id string) error {
+	_, err := s.client.DeleteItem(context.Background(), &dynamodb.DeleteItemInput{
+		TableName: aws.String(s.tableName),
+		Key: map[string]types.AttributeValue{
+			"id": &types.AttributeValueMemberS{Value: id},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("deleting customer item: %w", err)
+	}
+	return nil
+}

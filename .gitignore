@@ -1,0 +1,4 @@
+bootstrap
+*.exe
+coverage.out
+.claude/worktrees/

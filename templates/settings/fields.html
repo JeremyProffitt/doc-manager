@@ -1,1 +1,97 @@
-<div>Settings fields placeholder</div>
+<div class="min-h-screen bg-gray-50">
+    <nav class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <span class="text-xl font-bold text-indigo-600">Doc-Manager</span>
+                    <a href="/" class="text-gray-500 hover:text-gray-900">Dashboard</a>
+                    <a href="/forms" class="text-gray-500 hover:text-gray-900">Forms</a>
+                    <a href="/customers" class="text-gray-500 hover:text-gray-900">Customers</a>
+                    <a href="/settings/fields" class="text-gray-900 font-medium">Settings</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600">{{.UserEmail}}</span>
+                    <form method="POST" action="/logout" class="inline">
+                        <button type="submit" class="text-sm text-gray-500 hover:text-gray-900">Sign Out</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">Field Settings</h1>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 max-w-2xl">
+            <p class="text-sm text-gray-500 mb-4">Configure the standard fields available for form placement. These field names will be used when analyzing forms with AI and when manually placing fields.</p>
+
+            <div id="fieldsContainer" class="space-y-3 mb-6">
+                {{range .Fields}}
+                <div class="flex items-center space-x-3 field-row">
+                    <input type="text" value="{{.Name}}" placeholder="Field name"
+                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none field-name">
+                    <select class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none field-type">
+                        <option value="text" {{if eq .Type "text"}}selected{{end}}>Text</option>
+                        <option value="number" {{if eq .Type "number"}}selected{{end}}>Number</option>
+                        <option value="date" {{if eq .Type "date"}}selected{{end}}>Date</option>
+                    </select>
+                    <button onclick="this.parentElement.remove()" class="text-red-500 hover:text-red-700 text-sm">Remove</button>
+                </div>
+                {{end}}
+            </div>
+
+            <div class="flex space-x-4">
+                <button onclick="addField()" class="text-indigo-600 hover:text-indigo-700 font-medium text-sm">+ Add Field</button>
+                <button onclick="saveFields()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium transition-colors text-sm">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+function addField() {
+    const container = document.getElementById('fieldsContainer');
+    const row = document.createElement('div');
+    row.className = 'flex items-center space-x-3 field-row';
+    row.innerHTML = `
+        <input type="text" placeholder="Field name"
+            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none field-name">
+        <select class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none field-type">
+            <option value="text">Text</option>
+            <option value="number">Number</option>
+            <option value="date">Date</option>
+        </select>
+        <button onclick="this.parentElement.remove()" class="text-red-500 hover:text-red-700 text-sm">Remove</button>
+    `;
+    container.appendChild(row);
+}
+
+async function saveFields() {
+    const rows = document.querySelectorAll('.field-row');
+    const fields = [];
+    rows.forEach(row => {
+        const name = row.querySelector('.field-name').value.trim();
+        const type = row.querySelector('.field-type').value;
+        if (name) {
+            fields.push({ name, type });
+        }
+    });
+
+    try {
+        const resp = await fetch('/api/settings/fields', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(fields)
+        });
+        if (resp.ok) {
+            alert('Fields saved successfully');
+        } else {
+            alert('Failed to save fields');
+        }
+    } catch (err) {
+        alert('Error saving fields: ' + err.message);
+    }
+}
+</script>

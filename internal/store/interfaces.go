@@ -22,10 +22,30 @@ type CustomerStore interface {
 	CreateCustomer(customer *models.Customer) error
 	GetCustomer(id string) (*models.Customer, error)
 	ListCustomers() ([]models.Customer, error)
+	UpdateCustomer(customer *models.Customer) error
+	DeleteCustomer(id string) error
 }
 
 // SettingsStore defines operations for managing settings in the data store.
 type SettingsStore interface {
 	GetSetting(key string) (*models.Setting, error)
 	PutSetting(setting *models.Setting) error
+}
+
+// FormStore defines operations for managing forms in the data store.
+type FormStore interface {
+	CreateForm(form *models.Form) error
+	GetForm(id string) (*models.Form, error)
+	ListForms(userId string) ([]models.Form, error)
+	UpdateForm(form *models.Form) error
+	DeleteForm(id string) error
+}
+
+// FieldStore defines operations for managing versioned field placements.
+type FieldStore interface {
+	SaveFieldPlacement(placement *models.FieldPlacement) (int, error) // returns new version number
+	GetLatestFieldPlacement(formId string) (*models.FieldPlacement, error)
+	GetFieldPlacement(formId string, version int) (*models.FieldPlacement, error)
+	ListVersions(formId string) ([]models.FieldPlacement, error) // metadata only (no fields array)
+	DeleteAllVersions(formId string) error
 }
