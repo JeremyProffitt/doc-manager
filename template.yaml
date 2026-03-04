@@ -103,7 +103,7 @@ Resources:
   DocManagerApi:
     Type: AWS::Serverless::HttpApi
     Properties:
-      StageName: !Ref Stage
+      StageName: $default
       CorsConfiguration:
         AllowOrigins:
           - "*"
@@ -260,7 +260,7 @@ Resources:
 Outputs:
   ApiUrl:
     Description: HTTP API endpoint URL for the Doc-Manager application
-    Value: !Sub https://${DocManagerApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}
+    Value: !Sub https://${DocManagerApi}.execute-api.${AWS::Region}.amazonaws.com
   DocManagerFunctionArn:
     Description: Lambda function ARN
     Value: !GetAtt DocManagerFunction.Arn

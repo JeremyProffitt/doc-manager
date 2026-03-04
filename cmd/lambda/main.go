@@ -4,7 +4,9 @@ import (
 	"context"
 	"log"
 	"os"
+	"strings"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
@@ -125,7 +127,20 @@ func main() {
 
 	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") != "" {
 		fiberLambda := fiberadapter.New(app)
-		lambda.Start(fiberLambda.ProxyWithContext)
+		stage := os.Getenv("STAGE")
+		lambda.Start(func(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+			// Strip API Gateway stage prefix from path so Fiber routes match
+			if stage != "" {
+				prefix := "/" + stage
+				if strings.HasPrefix(req.RawPath, prefix) {
+					req.RawPath = strings.TrimPrefix(req.RawPath, prefix)
+					if req.RawPath == "" {
+						req.RawPath = "/"
+					}
+				}
+			}
+			return fiberLambda.ProxyWithContextV2(ctx, req)
+		})
 	} else {
 		log.Fatal(app.Listen(":3000"))
 	}
