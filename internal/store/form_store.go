@@ -70,7 +70,7 @@ func (s *DynamoFormStore) GetForm(id string) (*models.Form, error) {
 func (s *DynamoFormStore) ListForms(userId string) ([]models.Form, error) {
 	result, err := s.client.Query(context.Background(), &dynamodb.QueryInput{
 		TableName:              aws.String(s.tableName),
-		IndexName:              aws.String("userId-index"),
+		IndexName:              aws.String("UserIdIndex"),
 		KeyConditionExpression: aws.String("userId = :uid"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":uid": &types.AttributeValueMemberS{Value: userId},

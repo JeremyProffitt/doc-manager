@@ -9,7 +9,7 @@ test.describe('Smoke Tests', () => {
 
   test('login page loads', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.locator('text=Doc-Manager')).toBeVisible();
+    await expect(page.locator('h1')).toContainText('Doc-Manager');
     await expect(page.locator('input[name="email"]')).toBeVisible();
     await expect(page.locator('input[name="password"]')).toBeVisible();
     await expect(page.locator('button[type="submit"]')).toBeVisible();
@@ -17,6 +17,6 @@ test.describe('Smoke Tests', () => {
 
   test('can log in and see dashboard', async ({ page }) => {
     await login(page);
-    await expect(page.locator('text=Dashboard')).toBeVisible();
+    await expect(page.locator('h1')).toContainText('Dashboard');
   });
 });

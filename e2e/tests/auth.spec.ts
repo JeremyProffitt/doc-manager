@@ -4,7 +4,7 @@ import { login } from '../helpers/auth';
 test.describe('Authentication', () => {
   test('login with valid credentials', async ({ page }) => {
     await login(page);
-    await expect(page.locator('text=Dashboard')).toBeVisible();
+    await expect(page.locator('h1')).toContainText('Dashboard');
     await expect(page.locator('a[href="/forms"]')).toBeVisible();
   });
 
