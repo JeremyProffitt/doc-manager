@@ -134,6 +134,8 @@ jobs:
         working-directory: e2e
         env:
           BASE_URL: ${{ needs.build-and-deploy.outputs.api_url }}
+          TEST_USER_EMAIL: proffitt.jeremy@gmail.com
+          TEST_USER_PASSWORD: ${{ secrets.SEED_USER_PASSWORD }}
         run: npx playwright test
 
       - name: Upload Playwright report on failure

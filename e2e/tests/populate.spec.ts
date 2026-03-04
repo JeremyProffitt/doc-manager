@@ -6,15 +6,17 @@ test.describe('Form Population', () => {
     await login(page);
   });
 
-  test('preview shows customer data on form', async ({ page }) => {
-    // TODO: Navigate to populate page, verify customer data visible
+  test.skip('preview shows customer data on form', async ({ page }) => {
+    // TODO: Navigate to populate page
+    // Verify select#customer-selector visible
+    // Verify customer data overlays on div#form-canvas
   });
 
-  test('can download populated PDF', async ({ page }) => {
-    // TODO: Click download, verify PDF file downloaded
+  test.skip('can download populated PDF', async ({ page }) => {
+    // TODO: Click a#download-btn, verify PDF file downloaded
   });
 
-  test('can switch customers in preview', async ({ page }) => {
-    // TODO: Change customer selector, verify data updates
+  test.skip('can switch customers in preview', async ({ page }) => {
+    // TODO: Change select#customer-selector, verify data updates
   });
 });

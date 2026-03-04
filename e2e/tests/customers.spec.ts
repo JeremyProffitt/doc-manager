@@ -8,21 +8,24 @@ test.describe('Customer Management', () => {
 
   test('customer list shows seeded customers', async ({ page }) => {
     await page.goto('/customers');
+    await expect(page.locator('h1')).toContainText('Customers');
     await expect(page.locator('text=John Smith')).toBeVisible();
     await expect(page.locator('text=Jane Doe')).toBeVisible();
   });
 
-  test('create a new customer', async ({ page }) => {
+  test('can navigate to add customer form', async ({ page }) => {
     await page.goto('/customers');
-    await page.click('text=Add Customer');
-    // TODO: Fill form and verify creation
+    await page.click('a[href="/customers/new"]');
+    await expect(page.locator('h1')).toContainText('Add Customer');
+    await expect(page.locator('input[name="name"]')).toBeVisible();
+    await expect(page.locator('input[name="business"]')).toBeVisible();
   });
 
-  test('edit a customer', async ({ page }) => {
+  test.skip('edit a customer', async ({ page }) => {
     // TODO: Edit and verify
   });
 
-  test('delete a customer', async ({ page }) => {
+  test.skip('delete a customer', async ({ page }) => {
     // TODO: Create test customer, delete, verify
   });
 });

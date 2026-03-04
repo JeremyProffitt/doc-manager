@@ -4,8 +4,8 @@ import { login } from '../helpers/auth';
 test.describe('Authentication', () => {
   test('login with valid credentials', async ({ page }) => {
     await login(page);
-    await expect(page).toHaveURL('/');
-    await expect(page.locator('text=Forms')).toBeVisible();
+    await expect(page.locator('text=Dashboard')).toBeVisible();
+    await expect(page.locator('a[href="/forms"]')).toBeVisible();
   });
 
   test('login with wrong password shows error', async ({ page }) => {
@@ -26,7 +26,7 @@ test.describe('Authentication', () => {
 
   test('logout redirects to login', async ({ page }) => {
     await login(page);
-    await page.click('text=Logout');
+    await page.click('text=Sign Out');
     await expect(page).toHaveURL(/\/login/);
   });
 

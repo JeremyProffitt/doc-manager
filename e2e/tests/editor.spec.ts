@@ -6,18 +6,18 @@ test.describe('Form Editor', () => {
     await login(page);
   });
 
-  test('editor page loads for a form', async ({ page }) => {
+  test.skip('editor page loads for a form', async ({ page }) => {
     // TODO: Navigate to an uploaded form's editor
-    // Verify form image visible
-    // Verify fields panel visible
-    // Verify version history visible
+    // Verify canvas: div#form-canvas
+    // Verify fields panel: ul#fields-list-ul
+    // Verify version history: ul#version-history
   });
 
-  test('can drag a field to a new position', async ({ page }) => {
+  test.skip('can drag a field to a new position', async ({ page }) => {
     // TODO: Drag field, save, reload, verify position
   });
 
-  test('can save field placements', async ({ page }) => {
+  test.skip('can save field placements', async ({ page }) => {
     // TODO: Make changes, click save, verify version incremented
   });
 });

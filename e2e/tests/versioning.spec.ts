@@ -6,11 +6,11 @@ test.describe('Version History', () => {
     await login(page);
   });
 
-  test('version history shows after save', async ({ page }) => {
-    // TODO: Open editor, save, verify version list
+  test.skip('version history shows after save', async ({ page }) => {
+    // TODO: Open editor, save, verify ul#version-history has items
   });
 
-  test('can revert to a previous version', async ({ page }) => {
+  test.skip('can revert to a previous version', async ({ page }) => {
     // TODO: Create multiple versions, revert, verify
   });
 });

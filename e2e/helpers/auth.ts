@@ -8,5 +8,6 @@ export async function login(page: Page) {
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');
-  await expect(page).toHaveURL('/');
+  // After login, we land on the home page. URL may include stage prefix (e.g. /prod/)
+  await page.waitForURL(/(\/|\/$)$/);
 }

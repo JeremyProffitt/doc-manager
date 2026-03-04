@@ -12,6 +12,7 @@ test.describe('Smoke Tests', () => {
     await expect(page.locator('text=Doc-Manager')).toBeVisible();
     await expect(page.locator('input[name="email"]')).toBeVisible();
     await expect(page.locator('input[name="password"]')).toBeVisible();
+    await expect(page.locator('button[type="submit"]')).toBeVisible();
   });
 
   test('can log in and see dashboard', async ({ page }) => {

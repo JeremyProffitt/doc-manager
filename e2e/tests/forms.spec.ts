@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 import { login } from '../helpers/auth';
-import path from 'path';
 
 test.describe('Form Management', () => {
   test.beforeEach(async ({ page }) => {
@@ -9,19 +8,20 @@ test.describe('Form Management', () => {
 
   test('forms page loads', async ({ page }) => {
     await page.goto('/forms');
-    await expect(page.locator('text=Form Library')).toBeVisible();
+    await expect(page.locator('h1')).toContainText('Form Library');
   });
 
-  test('upload a PDF form', async ({ page }) => {
+  test('forms page has upload area', async ({ page }) => {
     await page.goto('/forms');
-    // TODO: Implement full upload flow test
-    // Click upload button
-    // Select sample-form.pdf
-    // Wait for upload complete
-    // Verify form appears in library
+    await expect(page.locator('div#drop-zone')).toBeVisible();
+    await expect(page.locator('input#file-input')).toBeAttached();
   });
 
-  test('delete a form', async ({ page }) => {
+  test.skip('upload a PDF form', async ({ page }) => {
+    // TODO: Implement full upload flow test with pre-signed URL
+  });
+
+  test.skip('delete a form', async ({ page }) => {
     // TODO: Create a form first, then delete it
   });
 });
