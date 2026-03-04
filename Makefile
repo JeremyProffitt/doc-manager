@@ -7,6 +7,8 @@ build:
 
 build-DocManagerFunction:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags lambda.norpc -o $(ARTIFACTS_DIR)/bootstrap cmd/lambda/main.go
+	cp -r templates $(ARTIFACTS_DIR)/templates
+	cp -r static $(ARTIFACTS_DIR)/static
 
 test:
 	go test -race ./...
