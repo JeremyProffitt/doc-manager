@@ -5,7 +5,7 @@ test.describe('Authentication', () => {
   test('login with valid credentials', async ({ page }) => {
     await login(page);
     await expect(page.locator('h1')).toContainText('Dashboard');
-    await expect(page.locator('a[href="/forms"]')).toBeVisible();
+    await expect(page.locator('nav a[href="/forms"]')).toBeVisible();
   });
 
   test('login with wrong password shows error', async ({ page }) => {
