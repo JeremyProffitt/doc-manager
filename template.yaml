@@ -33,7 +33,7 @@ Resources:
       Handler: bootstrap
       Runtime: provided.al2023
       Architectures:
-        - x86_64
+        - arm64
       Environment:
         Variables:
           S3_BUCKET: !Ref FormStorageBucket

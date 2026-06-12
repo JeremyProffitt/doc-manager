@@ -3,10 +3,10 @@
 all: vet test build
 
 build:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags lambda.norpc -o bootstrap cmd/lambda/main.go
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -tags lambda.norpc -o bootstrap cmd/lambda/main.go
 
 build-DocManagerFunction:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags lambda.norpc -o $(ARTIFACTS_DIR)/bootstrap cmd/lambda/main.go
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -tags lambda.norpc -o $(ARTIFACTS_DIR)/bootstrap cmd/lambda/main.go
 	cp -r templates $(ARTIFACTS_DIR)/templates
 	cp -r static $(ARTIFACTS_DIR)/static
 

@@ -50,7 +50,7 @@ jobs:
 
       - name: Build Lambda binary
         run: |
-          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
+          GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build \
             -tags lambda.norpc \
             -o bootstrap \
             cmd/lambda/main.go
@@ -86,6 +86,7 @@ jobs:
             --stack-name doc-manager \
             --s3-bucket "$SAM_BUCKET" \
             --region ${{ vars.AWS_REGION }} \
+            --tags "Project=doc-manager CostCenter=media Environment=prod ManagedBy=sam DeployedVia=github-actions Owner=jeremy" \
             --parameter-overrides JwtSecret=${{ secrets.JWT_SECRET }} \
             --capabilities CAPABILITY_IAM
 
