@@ -22,11 +22,10 @@ func main() {
 	customerStore := store.NewCustomerStore(client, cfg.CustomersTable)
 	settingsStore := store.NewSettingsStore(client, cfg.SettingsTable)
 
-	// Get password from env, fallback to default for local dev
+	// Get password from env; required, no fallback
 	password := os.Getenv("SEED_USER_PASSWORD")
 	if password == "" {
-		password = "Docs4President!"
-		log.Println("SEED_USER_PASSWORD not set, using default password")
+		log.Fatal("SEED_USER_PASSWORD environment variable is required")
 	}
 
 	// Run seeder

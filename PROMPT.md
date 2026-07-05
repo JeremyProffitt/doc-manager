@@ -84,7 +84,7 @@ Launch these as parallel subagents (using the Agent tool with `isolation: "workt
 
 ### Key technical details (from the PRD)
 
-- **Auth:** bcrypt passwords, JWT session cookies, DynamoDB Sessions table with TTL. Seed user: `proffitt.jeremy@gmail.com` / `Docs4President!`
+- **Auth:** bcrypt passwords, JWT session cookies, DynamoDB Sessions table with TTL. Seed user: `proffitt.jeremy@gmail.com` / password from the `SEED_USER_PASSWORD` secret
 - **Upload:** Browser → pre-signed S3 PUT URL (5 min expiry) → S3 direct. No files through Lambda.
 - **DynamoDB tables:** DocMgr-Users, DocMgr-Forms, DocMgr-FieldPlacements (PK: formId, SK: version), DocMgr-Customers, DocMgr-Settings, DocMgr-Sessions
 - **Bedrock model:** `anthropic.claude-sonnet-4-20250514` in `us-east-1`

@@ -305,7 +305,7 @@ Resources to define:
 
 #### 1.5 Seed Script (`cmd/seed/main.go`)
 - Connects to DynamoDB
-- Creates the seed user (`proffitt.jeremy@gmail.com` / bcrypt hash of `Docs4President!`)
+- Creates the seed user (`proffitt.jeremy@gmail.com` / bcrypt hash of the password from the `SEED_USER_PASSWORD` secret)
 - Inserts the 5 mock customers from the PRD
 - Inserts default standard field definitions into the Settings table
 - Idempotent — uses `PutItem` with condition expressions to avoid overwriting existing data

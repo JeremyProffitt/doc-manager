@@ -99,7 +99,7 @@ func TestSeedUser_BcryptHashVerification(t *testing.T) {
 	ss := NewMockSettingsStore()
 	seeder := NewSeeder(us, cs, ss)
 
-	password := "Docs4President!"
+	password := "TestBcryptCheck123!"
 	err := seeder.SeedUser("user@example.com", password, "User")
 	if err != nil {
 		t.Fatalf("SeedUser returned error: %v", err)

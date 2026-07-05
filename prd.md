@@ -41,7 +41,7 @@ A web application where users:
 | Field    | Value                          |
 |----------|--------------------------------|
 | Email    | `proffitt.jeremy@gmail.com`    |
-| Password | `Docs4President!` (bcrypt hash stored in DynamoDB) |
+| Password | value of `SEED_USER_PASSWORD` secret (bcrypt hash stored in DynamoDB) |
 
 > **Note:** The seed user is inserted via a setup script or SAM custom resource during initial deployment. The plaintext password is never stored — only the bcrypt hash.
 
